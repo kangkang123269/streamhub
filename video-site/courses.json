@@ -1,0 +1,113 @@
+[
+  {
+    "id": 1001,
+    "title": "React 18 从入门到精通",
+    "description": "系统学习 React 18 最新特性，Hooks、Suspense、并发模式",
+    "instructor": "张老师",
+    "thumbnail": "https://picsum.photos/seed/react/640/360",
+    "price": 99,
+    "category": "前端开发",
+    "lessons": [
+      {
+        "id": 1,
+        "title": "React 基础介绍",
+        "duration": "15:30",
+        "videoUrl": "https://www.w3schools.com/html/mov_bbb.mp4"
+      },
+      {
+        "id": 2,
+        "title": "JSX 语法详解",
+        "duration": "20:45",
+        "videoUrl": "https://www.w3schools.com/html/mov_bbb.mp4"
+      },
+      {
+        "id": 3,
+        "title": "组件与 Props",
+        "duration": "25:10",
+        "videoUrl": "https://www.w3schools.com/html/mov_bbb.mp4"
+      },
+      {
+        "id": 4,
+        "title": "State 与生命周期",
+        "duration": "30:00",
+        "videoUrl": "https://www.w3schools.com/html/mov_bbb.mp4"
+      },
+      {
+        "id": 5,
+        "title": "Hooks 深入理解",
+        "duration": "40:20",
+        "videoUrl": "https://www.w3schools.com/html/mov_bbb.mp4"
+      }
+    ]
+  },
+  {
+    "id": 1002,
+    "title": "Node.js 全栈开发实战",
+    "description": "从 Express 到 MongoDB，完整的后端开发课程",
+    "instructor": "李老师",
+    "thumbnail": "https://picsum.photos/seed/nodejs/640/360",
+    "price": 199,
+    "category": "后端开发",
+    "lessons": [
+      {
+        "id": 1,
+        "title": "Node.js 环境搭建",
+        "duration": "18:00",
+        "videoUrl": "https://www.w3schools.com/html/mov_bbb.mp4"
+      },
+      {
+        "id": 2,
+        "title": "Express 框架入门",
+        "duration": "25:30",
+        "videoUrl": "https://www.w3schools.com/html/mov_bbb.mp4"
+      },
+      {
+        "id": 3,
+        "title": "RESTful API 设计",
+        "duration": "35:45",
+        "videoUrl": "https://www.w3schools.com/html/mov_bbb.mp4"
+      },
+      {
+        "id": 4,
+        "title": "MongoDB 数据库",
+        "duration": "42:15",
+        "videoUrl": "https://www.w3schools.com/html/mov_bbb.mp4"
+      }
+    ]
+  },
+  {
+    "id": 1003,
+    "title": "Python 数据分析与可视化",
+    "description": "Pandas、NumPy、Matplotlib 实战教程",
+    "instructor": "王老师",
+    "thumbnail": "https://picsum.photos/seed/python/640/360",
+    "price": 149,
+    "category": "数据分析",
+    "lessons": [
+      {
+        "id": 1,
+        "title": "Python 基础回顾",
+        "duration": "20:00",
+        "videoUrl": "https://www.w3schools.com/html/mov_bbb.mp4"
+      },
+      {
+        "id": 2,
+        "title": "NumPy 数组操作",
+        "duration": "28:30",
+        "videoUrl": "https://www.w3schools.com/html/mov_bbb.mp4"
+      },
+      {
+        "id": 3,
+        "title": "Pandas 数据处理",
+        "duration": "45:00",
+        "videoUrl": "https://www.w3schools.com/html/mov_bbb.mp4"
+      },
+      {
+        "id": 4,
+        "title": "Matplotlib 可视化",
+        "duration": "38:15",
+        "videoUrl": "https://www.w3schools.com/html/mov_bbb.mp4"
+      }
+    ]
+  }
+]

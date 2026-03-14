@@ -1,0 +1,26 @@
+[
+  {
+    "id": 1773501227365,
+    "title": "2",
+    "thumbnail": "https://picsum.photos/seed/1773501227365/640/360",
+    "streamer": "爬虫",
+    "viewers": 0,
+    "isLive": false,
+    "isLocal": true,
+    "videoUrl": "/courses/1773501227365.mp4",
+    "price": 0,
+    "category": "爬虫"
+  },
+  {
+    "id": 1773501056194,
+    "title": "1",
+    "thumbnail": "https://picsum.photos/seed/1773501056194/640/360",
+    "streamer": "爬虫",
+    "viewers": 0,
+    "isLive": false,
+    "isLocal": true,
+    "videoUrl": "/courses/1773501056194.mp4",
+    "price": 0,
+    "category": "爬虫"
+  }
+]

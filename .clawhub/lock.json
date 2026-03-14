@@ -1,0 +1,61 @@
+{
+  "version": 1,
+  "skills": {
+    "tavily-search": {
+      "version": "1.0.0",
+      "installedAt": 1772979763891
+    },
+    "summarize": {
+      "version": "1.0.0",
+      "installedAt": 1772979765348
+    },
+    "agent-browser": {
+      "version": "0.2.0",
+      "installedAt": 1772979767097
+    },
+    "find-skills": {
+      "version": "0.1.0",
+      "installedAt": 1772979768513
+    },
+    "github": {
+      "version": "1.0.0",
+      "installedAt": 1772979770026
+    },
+    "obsidian": {
+      "version": "1.0.0",
+      "installedAt": 1772979771448
+    },
+    "weather": {
+      "version": "1.0.0",
+      "installedAt": 1772979773117
+    },
+    "tencentcloud-lighthouse-skill": {
+      "version": "1.0.0",
+      "installedAt": 1772979775049
+    },
+    "tencent-docs": {
+      "version": "1.0.4",
+      "installedAt": 1772979777037
+    },
+    "tencent-cos-skill": {
+      "version": "1.0.6",
+      "installedAt": 1772979779532
+    },
+    "github-helper": {
+      "version": "1.0.0",
+      "installedAt": 1773500689999
+    },
+    "github-integration": {
+      "version": "1.0.0",
+      "installedAt": 1773500721433
+    },
+    "github-workflow": {
+      "version": "0.1.1",
+      "installedAt": 1773500752990
+    },
+    "github-track": {
+      "version": "1.0.0",
+      "installedAt": 1773500790869
+    }
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "skills": {
+    "github-helper": {
+      "name": "github-helper",
+      "zip_url": "https://lightmake.site/api/v1/download?slug=github-helper",
+      "source": "skillhub",
+      "version": "1.0.0"
+    },
+    "github-integration": {
+      "name": "Github",
+      "zip_url": "https://lightmake.site/api/v1/download?slug=github-integration",
+      "source": "skillhub",
+      "version": "1.0.0"
+    },
+    "github-workflow": {
+      "name": "Github Workflow",
+      "zip_url": "https://lightmake.site/api/v1/download?slug=github-workflow",
+      "source": "skillhub",
+      "version": "0.1.1"
+    },
+    "github-track": {
+      "name": "GitHub Track",
+      "zip_url": "https://lightmake.site/api/v1/download?slug=github-track",
+      "source": "skillhub",
+      "version": "1.0.0"
+    }
+  }
+}
