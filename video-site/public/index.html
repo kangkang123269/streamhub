@@ -289,6 +289,11 @@
         function closeVideoModal(){
             document.getElementById('video-modal').classList.remove('active');
             document.body.style.overflow='';
+            const video = document.querySelector('#video-modal .video-player');
+            if(video){
+                video.pause();
+                video.src = '';
+            }
         }
 
         async function purchaseVideo(id){
@@ -345,6 +350,11 @@
         function closeCourseModal(){
             document.getElementById('course-modal').classList.remove('active');
             document.body.style.overflow='';
+            const video = document.getElementById('course-player');
+            if(video){
+                video.pause();
+                video.src = '';
+            }
         }
 
         async function purchaseCourse(id){
@@ -355,12 +365,35 @@
             }catch(e){alert('购买失败');}
         }
 
-        document.getElementById('file-input').addEventListener('change',function(){if(this.files.length>0)document.getElementById('upload-form').style.display='block';});
+        document.getElementById('file-input').addEventListener('change',function(){
+            if(this.files.length>0){
+                const file = this.files[0];
+                document.getElementById('upload-form').style.display='block';
+                document.getElementById('upload-title').placeholder = file.name;
+                alert('✅ 已选择文件：' + file.name + '\n\n点击"开始上传"继续！');
+            }
+        });
         
         async function doUpload(){
             const i=document.getElementById('file-input');
             const t=document.getElementById('upload-title').value;
-            if(!i.files.length)return;
+            if(!i.files.length){
+                alert('❌ 请先选择一个视频文件！');
+                return;
+            }
+            
+            const file = i.files[0];
+            const maxSize = 500 * 1024 * 1024;
+            if(file.size > maxSize){
+                alert('❌ 文件太大！最大支持 500MB');
+                return;
+            }
+            
+            const validTypes = ['video/mp4', 'video/webm', 'video/quicktime'];
+            if(!validTypes.includes(file.type) && !file.name.match(/\.(mp4|webm|mov)$/i)){
+                alert('❌ 不支持的文件格式！请上传 MP4、WebM 或 MOV 视频');
+                return;
+            }
             
             const form=document.getElementById('upload-form');
             const progress=document.getElementById('upload-progress');
@@ -372,7 +405,7 @@
             progressBar.style.width='0%';
             progressText.textContent='准备上传...';
             
-            const fd=new FormData();fd.append('video',i.files[0]);fd.append('title',t||i.files[0].name);
+            const fd=new FormData();fd.append('video',file);fd.append('title',t||file.name);
             
             try{
                 const xhr=new XMLHttpRequest();
@@ -389,16 +422,23 @@
                     if(xhr.status===200){
                         progressText.textContent='✅ 上传成功！';
                         progressBar.style.width='100%';
+                        alert('✅ 上传成功！视频已添加到首页');
                         await loadVideos();
                         renderVideos();
-                        setTimeout(function(){showPage('home');},1000);
+                        
+                        setTimeout(function(){
+                            showPage('home');
+                            resetUploadForm();
+                        },1000);
                     }else{
                         progressText.textContent='❌ 上传失败';
+                        alert('❌ 上传失败！请重试或选择更小的文件');
                     }
                 };
                 
                 xhr.onerror=function(){
                     progressText.textContent='❌ 上传失败';
+                    alert('❌ 上传失败！网络错误，请检查网络连接');
                 };
                 
                 xhr.open('POST','/api/upload');
@@ -406,7 +446,20 @@
                 
             }catch(e){
                 progressText.textContent='❌ 上传失败';
+                alert('❌ 上传失败：' + e.message);
             }
+        }
+        
+        function resetUploadForm(){
+            const i=document.getElementById('file-input');
+            const t=document.getElementById('upload-title');
+            const form=document.getElementById('upload-form');
+            const progress=document.getElementById('upload-progress');
+            
+            i.value='';
+            t.value='';
+            form.style.display='none';
+            progress.style.display='none';
         }
 
         async function doCrawl(){
