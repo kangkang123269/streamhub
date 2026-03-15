@@ -368,7 +368,14 @@
         document.getElementById('file-input').addEventListener('change',function(){
             if(this.files.length>0){
                 const file = this.files[0];
-                document.getElementById('upload-form').style.display='block';
+                const form=document.getElementById('upload-form');
+                const progress=document.getElementById('upload-progress');
+                const progressBar=document.getElementById('progress-bar');
+                const progressText=document.getElementById('progress-text');
+                
+                progress.style.display='none';
+                progressBar.style.width='0%';
+                form.style.display='block';
                 document.getElementById('upload-title').placeholder = file.name;
                 alert('✅ 已选择文件：' + file.name + '\n\n点击"开始上传"继续！');
             }
