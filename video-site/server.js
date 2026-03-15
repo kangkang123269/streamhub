@@ -8,6 +8,7 @@ const http = require('http');
 const axios = require('axios');
 const cheerio = require('cheerio');
 const NodeMediaServer = require('node-media-server');
+const ffmpeg = require('fluent-ffmpeg');
 
 const app = express();
 const HTTP_PORT = 8000;
@@ -265,21 +266,75 @@ app.get('/api/streams', (req, res) => {
 
 app.post('/api/upload', upload.single('video'), (req, res) => {
   if (!req.file) return res.status(400).json({ error: '没有上传文件' });
-  const newVideo = {
-    id: Date.now(),
-    title: req.body.title || req.file.originalname,
-    thumbnail: 'https://picsum.photos/seed/' + Date.now() + '/640/360',
-    streamer: '本地用户',
-    viewers: 0,
-    isLive: false,
-    isLocal: true,
-    videoUrl: '/uploads/' + req.file.filename,
-    price: 0,
-    category: '本地'
-  };
-  localVideos.unshift(newVideo);
-  saveData();
-  res.json({ success: true, video: newVideo });
+  
+  const originalPath = req.file.path;
+  const videoId = Date.now();
+  const compressedFilename = videoId + '-compressed.mp4';
+  const compressedPath = path.join(uploadDir, compressedFilename);
+  
+  console.log(`[上传] 开始处理视频: ${req.file.originalname}, 大小: ${(req.file.size / 1024 / 1024).toFixed(2)}MB`);
+  
+  ffmpeg(originalPath)
+    .output(compressedPath)
+    .videoCodec('libx264')
+    .audioCodec('aac')
+    .size('?x720')
+    .videoBitrate('1000k')
+    .audioBitrate('128k')
+    .outputOptions(['-movflags', '+faststart', '-crf', '28'])
+    .on('start', (commandLine) => {
+      console.log('[FFmpeg] 开始压缩: ' + commandLine);
+    })
+    .on('progress', (progress) => {
+      console.log('[FFmpeg] 处理中: ' + Math.round(progress.percent || 0) + '%');
+    })
+    .on('end', () => {
+      console.log('[FFmpeg] 压缩完成！');
+      
+      try {
+        fs.unlinkSync(originalPath);
+        console.log('[上传] 已删除原始文件');
+      } catch (e) {
+        console.log('[上传] 删除原始文件失败:', e.message);
+      }
+      
+      const newVideo = {
+        id: videoId,
+        title: req.body.title || req.file.originalname,
+        thumbnail: 'https://picsum.photos/seed/' + videoId + '/640/360',
+        streamer: '本地用户',
+        viewers: 0,
+        isLive: false,
+        isLocal: true,
+        videoUrl: '/uploads/' + compressedFilename,
+        price: 0,
+        category: '本地'
+      };
+      localVideos.unshift(newVideo);
+      saveData();
+      res.json({ success: true, video: newVideo });
+    })
+    .on('error', (err) => {
+      console.log('[FFmpeg] 压缩失败:', err.message);
+      console.log('[上传] 使用原始文件代替');
+      
+      const newVideo = {
+        id: videoId,
+        title: req.body.title || req.file.originalname,
+        thumbnail: 'https://picsum.photos/seed/' + videoId + '/640/360',
+        streamer: '本地用户',
+        viewers: 0,
+        isLive: false,
+        isLocal: true,
+        videoUrl: '/uploads/' + req.file.filename,
+        price: 0,
+        category: '本地'
+      };
+      localVideos.unshift(newVideo);
+      saveData();
+      res.json({ success: true, video: newVideo });
+    })
+    .run();
 });
 
 async function downloadVideo(url, filename) {

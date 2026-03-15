@@ -414,7 +414,11 @@
                     if(e.lengthComputable){
                         const percent=Math.round((e.loaded/e.total)*100);
                         progressBar.style.width=percent+'%';
-                        progressText.textContent='上传中... '+percent+'%';
+                        if(percent < 100){
+                            progressText.textContent='上传中... '+percent+'%';
+                        }else{
+                            progressText.textContent='处理中，请稍候...';
+                        }
                     }
                 };
                 
@@ -432,7 +436,12 @@
                         },1000);
                     }else{
                         progressText.textContent='❌ 上传失败';
-                        alert('❌ 上传失败！请重试或选择更小的文件');
+                        try{
+                            const err = JSON.parse(xhr.responseText);
+                            alert('❌ 上传失败：' + (err.error || '请重试或选择更小的文件'));
+                        }catch(e){
+                            alert('❌ 上传失败！请重试或选择更小的文件');
+                        }
                     }
                 };
                 
