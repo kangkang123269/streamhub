@@ -90,18 +90,31 @@
                     <input type="text" id="upload-title" placeholder="输入视频标题">
                 </div>
                 <button class="btn" onclick="doUpload()">🚀 开始上传</button>
+                <div id="upload-progress" style="display:none;margin-top:16px">
+                    <div style="background:#374151;border-radius:8px;height:12px;overflow:hidden">
+                        <div id="progress-bar" style="background:linear-gradient(135deg,#8b5cf6 0%,#7c3aed 100%);height:100%;width:0%;transition:width 0.3s"></div>
+                    </div>
+                    <div id="progress-text" style="text-align:center;margin-top:8px;color:#9ca3af">上传中...</div>
+                </div>
             </div>
             <div style="margin-top:30px">
-                <h3 style="margin-bottom:10px">🕷️ 网络爬取</h3>
+                <h3 style="margin-bottom:10px">🕷️ 网站视频爬虫</h3>
+                <p style="color:#9ca3af;margin-bottom:16px">输入任意网页URL，自动提取所有视频链接</p>
                 <div class="form-group">
-                    <label>视频URL</label>
-                    <input type="text" id="crawl-url" placeholder="https://example.com/video.mp4">
+                    <label>网页URL</label>
+                    <input type="text" id="crawler-url" placeholder="https://example.com/page-with-videos">
                 </div>
-                <div class="form-group">
-                    <label>视频标题（可选）</label>
-                    <input type="text" id="crawl-title" placeholder="输入视频标题">
+                <button class="btn" onclick="parseWebsite()" style="margin-bottom:16px">🔍 解析网页</button>
+                
+                <div id="crawler-results" style="display:none">
+                    <h4 style="margin-bottom:12px">📹 发现的视频：</h4>
+                    <div id="video-list" style="max-height:300px;overflow-y:auto;background:#111827;border:1px solid #374151;border-radius:8px;padding:12px;margin-bottom:12px"></div>
+                    <div class="form-group">
+                        <label>视频标题（可选）</label>
+                        <input type="text" id="download-title" placeholder="输入视频标题">
+                    </div>
+                    <button class="btn" onclick="downloadVideo()" style="background:linear-gradient(135deg,#22c55e 0%,#16a34a 100%)">⬇️ 下载选中视频</button>
                 </div>
-                <button class="btn" onclick="doCrawl()">🕷️ 开始爬取</button>
             </div>
         </div>
     </div>
@@ -348,12 +361,52 @@
             const i=document.getElementById('file-input');
             const t=document.getElementById('upload-title').value;
             if(!i.files.length)return;
+            
+            const form=document.getElementById('upload-form');
+            const progress=document.getElementById('upload-progress');
+            const progressBar=document.getElementById('progress-bar');
+            const progressText=document.getElementById('progress-text');
+            
+            form.style.display='none';
+            progress.style.display='block';
+            progressBar.style.width='0%';
+            progressText.textContent='准备上传...';
+            
             const fd=new FormData();fd.append('video',i.files[0]);fd.append('title',t||i.files[0].name);
+            
             try{
-                const r=await fetch('/api/upload',{method:'POST',body:fd});
-                const d=await r.json();
-                if(d.success){alert('✅ 上传成功！');await loadVideos();renderVideos();showPage('home');}
-            }catch(e){alert('❌ 上传失败');}
+                const xhr=new XMLHttpRequest();
+                
+                xhr.upload.onprogress=function(e){
+                    if(e.lengthComputable){
+                        const percent=Math.round((e.loaded/e.total)*100);
+                        progressBar.style.width=percent+'%';
+                        progressText.textContent='上传中... '+percent+'%';
+                    }
+                };
+                
+                xhr.onload=async function(){
+                    if(xhr.status===200){
+                        progressText.textContent='✅ 上传成功！';
+                        progressBar.style.width='100%';
+                        await loadVideos();
+                        renderVideos();
+                        setTimeout(function(){showPage('home');},1000);
+                    }else{
+                        progressText.textContent='❌ 上传失败';
+                    }
+                };
+                
+                xhr.onerror=function(){
+                    progressText.textContent='❌ 上传失败';
+                };
+                
+                xhr.open('POST','/api/upload');
+                xhr.send(fd);
+                
+            }catch(e){
+                progressText.textContent='❌ 上传失败';
+            }
         }
 
         async function doCrawl(){
@@ -408,6 +461,88 @@
                 chatMessages.push({role:'assistant',content:'抱歉，发送失败。请直接在 OpenClaw 界面中与我对话。',timestamp:Date.now()});
                 renderChatMessages();
             }
+        }
+        
+        let selectedVideoUrl = null;
+        
+        async function parseWebsite(){
+            const url = document.getElementById('crawler-url').value.trim();
+            if(!url){alert('请输入网页URL');return;}
+            
+            const btn = event.target;
+            const originalText = btn.textContent;
+            btn.textContent = '解析中...';
+            btn.disabled = true;
+            
+            try{
+                const res = await fetch('/api/crawler/parse',{
+                    method:'POST',
+                    headers:{'Content-Type':'application/json'},
+                    body:JSON.stringify({url})
+                });
+                const data = await res.json();
+                
+                if(data.success && data.videos.length>0){
+                    document.getElementById('crawler-results').style.display='block';
+                    const list = document.getElementById('video-list');
+                    list.innerHTML = data.videos.map((v,idx)=>`
+                        <div style="padding:10px;margin:8px 0;background:rgba(139,92,246,.1);border-radius:8px;cursor:pointer;border:2px solid transparent" 
+                             onclick="selectVideo('${v.url}',this)" data-url="${v.url}">
+                            <div style="font-size:12px;color:#9ca3af;margin-bottom:4px">${v.type.toUpperCase()}</div>
+                            <div style="word-break:break-all;font-size:13px">${v.url.length>80?v.url.substring(0,80)+'...':v.url}</div>
+                        </div>
+                    `).join('');
+                    alert(`✅ 发现 ${data.videos.length} 个视频！点击选择要下载的`);
+                }else{
+                    alert('未发现视频链接，可能需要登录或网站有反爬');
+                }
+            }catch(e){
+                alert('解析失败：'+e.message);
+            }
+            
+            btn.textContent = originalText;
+            btn.disabled = false;
+        }
+        
+        function selectVideo(url,el){
+            document.querySelectorAll('#video-list > div').forEach(d=>{
+                d.style.borderColor='transparent';
+                d.style.background='rgba(139,92,246,.1)';
+            });
+            el.style.borderColor='#8b5cf6';
+            el.style.background='rgba(139,92,246,.2)';
+            selectedVideoUrl = url;
+        }
+        
+        async function downloadVideo(){
+            if(!selectedVideoUrl){alert('请先选择一个视频');return;}
+            
+            const title = document.getElementById('download-title').value;
+            const btn = event.target;
+            const originalText = btn.textContent;
+            btn.textContent = '下载中...';
+            btn.disabled = true;
+            
+            try{
+                const res = await fetch('/api/crawler/download',{
+                    method:'POST',
+                    headers:{'Content-Type':'application/json'},
+                    body:JSON.stringify({url:selectedVideoUrl,title})
+                });
+                const data = await res.json();
+                
+                if(data.success){
+                    alert('✅ 下载成功！');
+                    await loadVideos();
+                    renderVideos();
+                    showPage('home');
+                }
+            }catch(e){
+                alert('下载失败：'+e.message);
+            }
+            
+            btn.textContent = originalText;
+            btn.disabled = false;
         }
         
         function showTTSInfo(){

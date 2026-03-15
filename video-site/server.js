@@ -6,6 +6,7 @@ const multer = require('multer');
 const https = require('https');
 const http = require('http');
 const axios = require('axios');
+const cheerio = require('cheerio');
 const NodeMediaServer = require('node-media-server');
 
 const app = express();
@@ -433,6 +434,146 @@ app.post('/api/tts', async (req, res) => {
       success: true, 
       message: '语音功能提示',
       note: '你可以直接在 OpenClaw 中让我用语音回复！我支持多种声音和语言。'
+    });
+  }
+});
+
+app.post('/api/crawler/parse', async (req, res) => {
+  const { url } = req.body;
+  if (!url) return res.status(400).json({ error: '请输入网址' });
+  
+  try {
+    const response = await axios.get(url, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+      },
+      timeout: 30000
+    });
+    
+    const $ = cheerio.load(response.data);
+    const videos = [];
+    const pageTitle = $('title').text() || url;
+    
+    $('video').each((i, el) => {
+      const src = $(el).attr('src') || $(el).find('source').attr('src');
+      if (src) {
+        videos.push({
+          type: 'video-tag',
+          url: src.startsWith('http') ? src : new URL(src, url).href,
+          poster: $(el).attr('poster')
+        });
+      }
+    });
+    
+    $('iframe[src*="youtube"], iframe[src*="vimeo"], iframe[src*="bilibili"]').each((i, el) => {
+      videos.push({
+        type: 'iframe',
+        url: $(el).attr('src')
+      });
+    });
+    
+    $('a[href$=".mp4"], a[href$=".webm"], a[href$=".mov"]').each((i, el) => {
+      const href = $(el).attr('href');
+      if (href) {
+        videos.push({
+          type: 'link',
+          url: href.startsWith('http') ? href : new URL(href, url).href,
+          text: $(el).text()
+        });
+      }
+    });
+    
+    const videoPatterns = [
+      /['"](https?:\/\/[^'"<>]+\.(mp4|webm|mov|m3u8)[^'"<>]*)['"]/gi,
+      /(?:src|href|url)\s*[=:]\s*['"]?([^'"<>]+\.(mp4|webm|mov|m3u8)[^'"<>]*)['"]?/gi
+    ];
+    
+    videoPatterns.forEach(pattern => {
+      let match;
+      while ((match = pattern.exec(response.data)) !== null) {
+        const videoUrl = match[1];
+        if (!videos.some(v => v.url === videoUrl)) {
+          videos.push({
+            type: 'extracted',
+            url: videoUrl.startsWith('http') ? videoUrl : new URL(videoUrl, url).href
+          });
+        }
+      }
+    });
+    
+    res.json({
+      success: true,
+      title: pageTitle,
+      url: url,
+      videos: videos,
+      total: videos.length
+    });
+    
+  } catch (error) {
+    res.status(500).json({
+      error: '解析失败',
+      message: error.message,
+      note: '可能需要登录或网站有反爬机制'
+    });
+  }
+});
+
+app.post('/api/crawler/download', async (req, res) => {
+  const { url, title } = req.body;
+  if (!url) return res.status(400).json({ error: '请输入视频URL' });
+  
+  const videoId = Date.now() + '-' + Math.random().toString(36).substr(2, 9);
+  const videoExt = path.extname(new URL(url).pathname) || '.mp4';
+  const videoPath = path.join(uploadDir, videoId + videoExt);
+  
+  try {
+    const response = await axios({
+      method: 'GET',
+      url: url,
+      responseType: 'stream',
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+      },
+      timeout: 60000
+    });
+    
+    const writer = fs.createWriteStream(videoPath);
+    response.data.pipe(writer);
+    
+    await new Promise((resolve, reject) => {
+      writer.on('finish', resolve);
+      writer.on('error', reject);
+    });
+    
+    const newVideo = {
+      id: Date.now(),
+      title: title || '下载的视频 ' + videoId,
+      streamer: '网络爬虫',
+      category: '下载',
+      thumbnail: 'https://picsum.photos/seed/' + videoId + '/640/360',
+      viewers: 1,
+      isLive: false,
+      isStreaming: false,
+      isLocal: true,
+      streamKey: 'download-' + videoId,
+      price: 0,
+      videoUrl: '/uploads/' + videoId + videoExt
+    };
+    
+    videos.unshift(newVideo);
+    saveData();
+    
+    res.json({
+      success: true,
+      message: '视频下载成功！',
+      video: newVideo
+    });
+    
+  } catch (error) {
+    if (fs.existsSync(videoPath)) fs.unlinkSync(videoPath);
+    res.status(500).json({
+      error: '下载失败',
+      message: error.message
     });
   }
 });
